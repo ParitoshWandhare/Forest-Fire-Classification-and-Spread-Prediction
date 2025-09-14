@@ -1,0 +1,75 @@
+# Data configuration for forest fire detection
+data:
+  # Raw data paths
+  raw_data_dir: "data/raw"
+  metadata_csv: "data/raw/WorldView Metadata - Sheet1.csv"
+  images_base_dir: "data/raw/forest_fire_dataset"
+  
+  # Processed data paths
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+  masks_dir: "data/interim/masks"
+  tiles_dir: "data/interim/tiles"
+  
+  # Image specifications
+  image_format: "png" 
+  original_size: [3800, 3400]  # [height, width] in pixels
+  
+  # Coordinate Reference System
+  crs: "EPSG:4326"  # WGS84 lat/lon
+  
+  # Tiling configuration
+  tile_size: 512  # pixels per tile
+  tile_overlap: 64  # pixels overlap between adjacent tiles
+  min_fire_pixels: 10  # minimum fire pixels per tile to include in training
+  
+  # Data splits
+  train_ratio: 0.7
+  val_ratio: 0.2
+  test_ratio: 0.1
+  
+  # States/regions to process
+  states: ["Ontario", "Quebec"]  # Add more states as needed
+  
+  # Date range (YYYY-MM-DD format)
+  date_range:
+    start: "2023-06-01"
+    end: "2023-06-30"
+    
+  # Fire detection parameters - optimized based on debug results
+  fire_detection:
+    method: "auto"  # Use automatic detection
+    # Parameters tested and validated with debug script
+    rgb_thresholds:
+      red_threshold: 170        # Sweet spot from debug: 170-200
+      orange_ratio: 0.7         # Sweet spot from debug: 0.7-1.2  
+      brightness_threshold: 300 # Balanced brightness requirement
+      green_max: 160           # Allow moderate green (less strict than before)
+      blue_max: 140            # Allow moderate blue (less strict than before)
+      red_green_contrast: 40   # Moderate red-green difference
+      red_blue_contrast: 30    # Moderate red-blue difference
+      min_fire_area: 2         # Allow smaller fire regions
+    
+    # Morphological operations for noise removal
+    noise_removal:
+      enabled: true
+      kernel_size: 3           # Size of morphological kernel
+      min_component_area: 2    # Remove very small components
+    
+  # Data augmentation (applied during tiling)
+  augmentation:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation_90: true
+    
+  # Quality control thresholds - updated based on expected better detection
+  quality_control:
+    max_fire_ratio_per_tile: 0.30    # Allow up to 30% fire pixels per tile
+    expected_fire_tiles_ratio: 0.20  # Expect ~20% of tiles to contain fire (more realistic)
+    min_fire_brightness: 350         # Lower minimum brightness
+    
+  # Performance monitoring
+  monitoring:
+    log_detection_stats: true
+    save_detection_samples: false    # Disabled for production
+    sample_output_dir: "data/interim/detection_samples"

@@ -1,0 +1,38 @@
+# Model configuration for U-Net fire segmentation
+model:
+  name: "unet"
+  
+  # U-Net architecture
+  unet:
+    encoder_name: "resnet34"  # resnet18, resnet34, resnet50, efficientnet-b0, etc.
+    encoder_weights: "imagenet"  # pretrained weights
+    in_channels: 3  # RGB input
+    classes: 1  # binary fire segmentation
+    activation: null  # <--- change: no final activation, model outputs raw logits
+    
+    # Decoder configuration
+    decoder_channels: [256, 128, 64, 32, 16]
+    decoder_use_batchnorm: true
+    decoder_attention_type: null  # null, "scse"
+    
+    # Advanced features
+    center: false  # add center block
+    aux_params: null  # auxiliary classification head
+    
+  # Model dimensions
+  input_size: [512, 512]  # [height, width]
+  
+  # Inference parameters
+  inference:
+    tile_size: 512
+    tile_overlap: 64
+    batch_size: 8
+    tta: false  # test time augmentation
+    
+  # Phase 2 preparation (ConvLSTM)
+  future:
+    temporal_depth: 5  # number of days to use for sequence
+    conv_lstm:
+      hidden_dim: 64
+      kernel_size: 3
+      num_layers: 2
