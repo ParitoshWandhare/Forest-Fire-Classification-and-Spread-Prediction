@@ -1,80 +1,82 @@
-# Training configuration (flattened for trainer)
-epochs: 60
-batch_size: 16
-num_workers: 4
+# Fixed Training configuration - Conservative settings to prevent overfitting
+epochs: 50  # Reduced from 60 for initial testing
+batch_size: 8  # Reduced from 16 for stability
+num_workers: 2  # Reduced from 4 to prevent data loader issues
 pin_memory: true
 seed: 42
 debug_mode: false
 
-# Optimizer (trainer expects 'type' and 'learning_rate')
+# Conservative optimizer settings
 optimizer:
-  type: "adam"
-  learning_rate: 1e-4
-  weight_decay: 1e-4
+  type: "adamw"  # Changed from adam to adamw for better regularization
+  learning_rate: 3e-5  # Significantly reduced from 1e-4
+  weight_decay: 1e-5   # Reduced weight decay
   betas: [0.9, 0.999]
 
 # Learning rate scheduler
 scheduler:
   type: "cosine"
-  T_max: 100
-  eta_min: 1e-6
+  T_max: 50  # Match epochs
+  eta_min: 1e-7  # Lower minimum
 
-  # fallback params (unused for cosine)
-  step_size: 30
-  gamma: 0.1
+  # fallback params
+  step_size: 15  # Reduced step size
+  gamma: 0.5     # Less aggressive decay
 
-  # plateau params (unused here)
+  # plateau params
   mode: "max"
-  patience: 10
-  factor: 0.5
+  patience: 7    # Reduced patience
+  factor: 0.7    # Less aggressive reduction
   threshold: 0.001
 
-# Loss function (top-level block)
+# Balanced loss function - addressing class imbalance
 loss:
-  loss_type: "combined"   # combined, dice, focal, iou
-  dice_weight: 0.6
-  focal_weight: 0.4
-  aux_weight: 0.3
-  focal_alpha: 0.75
-  focal_gamma: 2.0
+  loss_type: "combined"
+  dice_weight: 0.7      # Increased Dice weight for better segmentation
+  focal_weight: 0.3     # Reduced focal weight
+  aux_weight: 0.2       # Reduced auxiliary weight
+  focal_alpha: 0.8      # Higher alpha for rare fire class
+  focal_gamma: 2.5      # Slightly higher gamma for hard examples
   dice_smooth: 1.0
   iou_smooth: 1.0
-  class_weights: [1.0, 5.0]
+  class_weights: [1.0, 8.0]  # Higher weight for fire class
   reduction: "mean"
 
-# Data augmentation (informational - used by dataset)
+# Conservative data augmentation - reduced intensity
 augmentation:
-  probability: 0.8
-  transforms:
-    horizontal_flip: 0.5
-    vertical_flip: 0.5
-    rotation: 0.3
-    brightness_contrast: 0.3
-    gaussian_noise: 0.2
-    cutout: 0.2
-  rotation_limit: 15
-  brightness_limit: 0.2
-  contrast_limit: 0.2
-  noise_var_limit: [0.0, 0.05]
-  cutout_holes: 8
-  cutout_size: 32
+  enabled: true
+  probability: 0.6  # Reduced from 0.8
+  horizontal_flip: 0.5
+  vertical_flip: 0.5
+  rotation_90: 0.3      # Reduced from 0.5
+  brightness_contrast: 0.2  # Reduced from 0.3
+  gaussian_noise: 0.1   # Reduced from 0.2
+  cutout: 0.1           # Reduced from 0.2
+  
+  # Reduced augmentation limits
+  rotation_limit: 10    # Reduced from 15
+  brightness_limit: 0.15  # Reduced from 0.2
+  contrast_limit: 0.15    # Reduced from 0.2
+  noise_var_limit: [0.0, 0.02]  # Reduced from 0.05
+  cutout_holes: 4       # Reduced from 8
+  cutout_size: 24       # Reduced from 32
 
 # Validation and monitoring
-validation_interval: 1            # validate every N epochs
+validation_interval: 1
 validation:
   metrics: ["iou", "dice", "precision", "recall", "f1"]
   threshold: 0.5
   early_visualize: true
 
-# Early stopping
+# Aggressive early stopping to prevent overfitting
 early_stopping:
-  patience: 15
+  patience: 8           # Reduced from 15
   monitor: "val_fire_f1"
   mode: "max"
-  min_delta: 0.001
+  min_delta: 0.002      # Increased sensitivity
   restore_best_weights: true
 
-# Checkpointing (informational - trainer uses save_interval and save_best logic)
+# Checkpointing
 checkpoint:
   save_top_k: 3
   monitor: "val_fire_f1"
@@ -83,31 +85,31 @@ checkpoint:
   dirpath: "checkpoints/"
   filename: "unet-{epoch:02d}-{val_fire_f1:.4f}"
 
-# Logging
+# Logging - more frequent for monitoring
 logging:
-  log_every_n_steps: 50
+  log_every_n_steps: 20  # Reduced from 50 for more monitoring
   save_dir: "logs/"
-  name: "fire_detection"
-  project: "forest_fire_unet"
+  name: "fire_detection_fixed"
+  project: "forest_fire_unet_v2"
   wandb:
     enabled: false
-    project: "forest-fire-detection"
+    project: "forest-fire-detection-fixed"
     entity: null
-    tags: ["unet", "fire-segmentation", "phase1"]
+    tags: ["unet", "fire-segmentation", "fixed-architecture"]
 
-# Precision / mixed precision
+# Precision settings - disabled mixed precision for stability
 precision: 32
 mixed_precision: false
 
-# Gradient clipping (trainer expects this key name)
-gradient_clipping: 1.0
+# Conservative gradient clipping
+gradient_clipping: 0.5  # Reduced from 1.0
 
-# Trainer tuning
-log_interval: 10
+# Trainer settings
+log_interval: 5         # More frequent logging
 validation_frequency: 1
-validation_interval: 1   # keep this to match trainer usage
-save_interval: 5
+validation_interval: 1
+save_interval: 3        # More frequent saves
 
-# Misc (kept for downstream use)
+# Misc
 tile_size: 512
 tile_overlap: 64

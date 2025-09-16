@@ -41,8 +41,8 @@ data:
     method: "auto"  # Use automatic detection
     # Parameters tested and validated with debug script
     rgb_thresholds:
-      red_threshold: 170        # Sweet spot from debug: 170-200
-      orange_ratio: 0.7         # Sweet spot from debug: 0.7-1.2  
+      red_threshold: 170        # Lowered red threshold for better sensitivity
+      orange_ratio: 0.7         # High orange to red ratio  
       brightness_threshold: 300 # Balanced brightness requirement
       green_max: 160           # Allow moderate green (less strict than before)
       blue_max: 140            # Allow moderate blue (less strict than before)

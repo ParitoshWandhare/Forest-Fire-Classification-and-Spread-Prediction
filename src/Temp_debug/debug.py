@@ -84,8 +84,8 @@ def analyze_fire_regions(image: np.ndarray,
 
 def test_fire_detection_thresholds(image: np.ndarray,
                                  red_thresholds: list = [170, 200, 220],
-                                 orange_ratios: list = [0.7, 1.2, 1.5, 2.0],
-                                 brightness_thresholds: list = [300, 500, 600]):
+                                 orange_ratios: list = [0.5, 1.2, 1.5, 2.0],
+                                 brightness_thresholds: list = [250, 500, 600]):
     """
     Test different threshold combinations and show results.
     """

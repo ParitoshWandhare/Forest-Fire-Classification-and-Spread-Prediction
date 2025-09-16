@@ -118,8 +118,8 @@ class LearningRateScheduler:
         if scheduler_type == 'cosine':
             self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
                 optimizer,
-                T_max=config.get('T_max', 100),
-                eta_min=config.get('eta_min', 1e-6)
+                T_max=int(config.get('T_max', 100)),
+                eta_min=float(config.get('eta_min', 1e-6))
             )
         elif scheduler_type == 'step':
             self.scheduler = optim.lr_scheduler.StepLR(
@@ -668,15 +668,22 @@ class FireDetectionTrainer:
         return val_metrics
 
     def log_metrics(self, train_metrics: Dict[str, float],
-                   val_metrics: Optional[Dict[str, float]] = None):
+               val_metrics: Optional[Dict[str, float]] = None):
         """Log training metrics."""
         # Log key metrics
         key_train_metrics = ['train_loss', 'fire_f1', 'mean_iou', 'fire_detection_rate']
         train_msg = " | ".join([f"{k}: {train_metrics.get(k, 0):.4f}" for k in key_train_metrics])
 
         if val_metrics:
-            key_val_metrics = ['val_loss', 'val_fire_f1', 'val_mean_iou', 'val_fire_detection_rate']
-            val_msg = " | ".join([f"{k}: {val_metrics.get(k, 0):.4f}" for k in key_val_metrics])
+            # FIXED: Map actual validation metric keys to display names
+            val_display_metrics = {
+                'val_loss': val_metrics.get('val_loss', 0),
+                'val_fire_f1': val_metrics.get('fire_f1', 0),  # Remove 'val_' prefix
+                'val_mean_iou': val_metrics.get('mean_iou', 0),  # Remove 'val_' prefix  
+                'val_fire_detection_rate': val_metrics.get('fire_detection_rate', 0)  # Remove 'val_' prefix
+            }
+            
+            val_msg = " | ".join([f"{k}: {v:.4f}" for k, v in val_display_metrics.items()])
 
             self.logger.info(f'Epoch {self.current_epoch} - Train: {train_msg}')
             self.logger.info(f'Epoch {self.current_epoch} - Val: {val_msg}')
@@ -739,7 +746,7 @@ class FireDetectionTrainer:
                 # Check for best model
                 is_best = False
                 if val_metrics:
-                    current_metric = val_metrics.get('val_fire_f1', val_metrics.get('val_mean_iou', 0))
+                    current_metric = val_metrics.get('fire_f1', val_metrics.get('mean_iou', 0))
                     if current_metric > self.best_val_metric:
                         self.best_val_metric = current_metric
                         is_best = True
